@@ -17,7 +17,7 @@ dotenv.config();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-
+app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false })); // désactivé pour ne pas bloquer les pages HTML servies ci-dessous
 app.use(cors({ origin: process.env.FRONTEND_URL || true }));
 
