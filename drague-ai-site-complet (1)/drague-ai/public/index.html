@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Drague.ai — assistant de répartie IA</title>
+<meta name="description" content="Importe une conversation ou une capture WhatsApp, reçois des réponses percutantes générées par IA." />
+<link rel="icon" type="image/svg+xml" href="assets/drague-ai-logo-icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1A1420;
+    --plum:#2C2038;
+    --plum-2:#382A46;
+    --chalk:#F6EFE4;
+    --punch:#E23F6A;
+    --punch-dark:#B72C51;
+    --gold:#E8B84B;
+    --mist:#6FA8B5;
+    --text-soft: rgba(246,239,228,0.65);
+    --text-faint: rgba(246,239,228,0.4);
+    --border: rgba(246,239,228,0.1);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
+
+  header{
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(10px);
+    background:rgba(26,20,32,0.75);
+    border-bottom:1px solid var(--border);
+  }
+  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0;}
+  .logo{
+    font-family:'Fraunces',serif;font-weight:600;font-size:22px;letter-spacing:-0.02em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo .dot{width:8px;height:8px;border-radius:50%;background:var(--punch);}
+  .nav-links{display:flex;gap:28px;font-size:14px;color:var(--text-soft);}
+  .nav-links a{color:inherit;text-decoration:none;}
+  .btn-login{
+    font-size:14px;color:var(--chalk);border:1px solid var(--border);
+    padding:9px 18px;border-radius:100px;text-decoration:none;
+  }
+
+  section{padding:96px 0;}
+  .hero{padding-top:88px;padding-bottom:60px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:20px;
+  }
+  h1{
+    font-family:'Fraunces',serif;font-weight:600;font-size:56px;line-height:1.05;
+    letter-spacing:-0.01em;margin:0 0 24px;max-width:680px;
+  }
+  h1 em{font-style:italic;font-weight:500;color:var(--punch);}
+  .hero-sub{font-size:18px;color:var(--text-soft);max-width:480px;margin:0 0 36px;}
+  .cta-row{display:flex;gap:14px;align-items:center;margin-bottom:80px;}
+  .btn-primary{
+    background:var(--punch);color:var(--chalk);border:none;
+    font-size:15px;font-weight:500;padding:14px 26px;border-radius:100px;
+    cursor:pointer;text-decoration:none;display:inline-block;
+  }
+  .btn-ghost{
+    color:var(--chalk);font-size:15px;padding:14px 22px;border-radius:100px;
+    border:1px solid var(--border);text-decoration:none;
+  }
+
+  .hero-stage{display:flex;justify-content:center;position:relative;}
+  .phone{
+    width:320px;background:var(--plum);border-radius:32px;padding:14px;
+    border:1px solid var(--border);position:relative;
+  }
+  .phone-screen{
+    background:#120D17;border-radius:20px;padding:20px 16px 16px;min-height:380px;
+    display:flex;flex-direction:column;gap:10px;
+  }
+  .phone-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint);text-align:center;margin-bottom:6px;}
+  .bubble{
+    max-width:78%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;
+  }
+  .bubble.them{background:var(--plum-2);color:var(--chalk);align-self:flex-start;border-bottom-left-radius:4px;}
+  .bubble.me{background:var(--chalk);color:#2A2119;align-self:flex-end;border-bottom-right-radius:4px;}
+  .bubble.draft{
+    background:transparent;border:1px dashed var(--text-faint);color:var(--text-faint);
+    align-self:flex-end;text-decoration:line-through;font-size:13px;
+  }
+  .bubble.final{
+    background:var(--punch);color:var(--chalk);align-self:flex-end;border-bottom-right-radius:4px;
+    position:relative;
+  }
+  .typing-cursor{display:inline-block;width:2px;height:14px;background:var(--gold);margin-left:2px;vertical-align:middle;animation:blink 0.8s step-end infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .gen-tag{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);
+    align-self:flex-end;margin-top:2px;opacity:0;transition:opacity 0.4s;
+  }
+  .gen-tag.show{opacity:1;}
+  .ticks{font-size:10px;color:var(--mist);margin-left:6px;}
+
+  .steps{background:var(--plum);border-radius:24px;padding:56px 48px;}
+  .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;}
+  .step-num{font-family:'JetBrains Mono',monospace;color:var(--punch);font-size:13px;margin-bottom:10px;}
+  .step-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0 0 8px;}
+  .step-desc{font-size:14px;color:var(--text-soft);margin:0;}
+  .section-head{margin-bottom:48px;}
+  .section-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+  h2{font-family:'Fraunces',serif;font-size:34px;font-weight:600;margin:0;max-width:560px;}
+
+  .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .feature-card{
+    background:var(--plum);border:1px solid var(--border);border-radius:16px;padding:28px;
+  }
+  .feature-icon{width:36px;height:36px;border-radius:10px;background:var(--plum-2);display:flex;align-items:center;justify-content:center;margin-bottom:18px;color:var(--gold);font-size:16px;}
+  .feature-card h3{font-family:'Inter',sans-serif;font-size:16px;font-weight:600;margin:0 0 8px;}
+  .feature-card p{font-size:14px;color:var(--text-soft);margin:0;}
+
+  .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .price-card{
+    background:var(--plum);border:1px solid var(--border);border-radius:16px;padding:32px 28px;
+    display:flex;flex-direction:column;
+  }
+  .price-card.featured{border:1px solid var(--punch);position:relative;}
+  .badge{
+    position:absolute;top:-12px;left:28px;background:var(--punch);color:var(--chalk);
+    font-size:11px;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:100px;
+  }
+  .price-name{font-size:14px;color:var(--text-soft);margin:0 0 8px;}
+  .price-amount{font-family:'Fraunces',serif;font-size:38px;font-weight:600;margin:0 0 4px;}
+  .price-amount span{font-size:14px;color:var(--text-faint);font-family:'Inter',sans-serif;font-weight:400;}
+  .price-features{list-style:none;padding:0;margin:20px 0 28px;font-size:13px;color:var(--text-soft);}
+  .price-features li{padding:6px 0;border-top:1px solid var(--border);}
+  .price-features li:first-child{border-top:none;}
+  .btn-price{
+    text-align:center;padding:12px;border-radius:100px;font-size:14px;font-weight:500;
+    text-decoration:none;color:var(--chalk);border:1px solid var(--border);margin-top:auto;
+  }
+  .btn-price.primary{background:var(--punch);border:none;}
+
+  .payment-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:36px;}
+  .pay-pill{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-soft);
+    border:1px solid var(--border);padding:8px 14px;border-radius:100px;
+  }
+
+  .trust{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+  .trust p{color:var(--text-soft);font-size:15px;max-width:440px;}
+  .trust-list{list-style:none;padding:0;margin:24px 0 0;}
+  .trust-list li{font-size:14px;color:var(--chalk);padding:8px 0;display:flex;gap:10px;align-items:center;}
+  .trust-list li:before{content:"";width:6px;height:6px;background:var(--mist);border-radius:50%;flex-shrink:0;}
+
+  footer{border-top:1px solid var(--border);padding:40px 0;}
+  .footer-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-faint);}
+
+  @media (max-width:760px){
+    h1{font-size:38px;}
+    .steps-grid,.features-grid,.pricing-grid{grid-template-columns:1fr;}
+    .trust{grid-template-columns:1fr;}
+    .nav-links{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 64 64" style="flex-shrink:0;"><rect x="6" y="8" width="52" height="38" rx="17" fill="var(--punch)"/><path d="M26 46 L20 58 L38 46 Z" fill="var(--punch)"/><path d="M32 16 C33 22, 38 27, 44 28 C38 29, 33 34, 32 40 C31 34, 26 29, 20 28 C26 27, 31 22, 32 16 Z" fill="var(--ink)"/></svg>Drague.ai</div>
+      <div class="nav-links">
+        <a href="#steps">Comment ça marche</a>
+        <a href="#pricing">Tarifs</a>
+        <a href="#trust">Confidentialité</a>
+      </div>
+      <a href="login.html" class="btn-login">Connexion</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Assistant de répartie IA</div>
+    <h1>Ne cherche plus tes mots.<br><em>Trouve la réplique.</em></h1>
+    <p class="hero-sub">Importe une conversation ou une capture WhatsApp, reçois en quelques secondes des réponses qui font mouche — dans le ton que tu veux.</p>
+    <div class="cta-row">
+      <a href="login.html" class="btn-primary">Essayer gratuitement</a>
+      <a href="#steps" class="btn-ghost">Voir comment ça marche</a>
+    </div>
+
+    <div class="hero-stage">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-time">Aujourd'hui, 21:42</div>
+          <div class="bubble them">On se voit ce week-end ou tu es toujours aussi occupé(e) ? 😏</div>
+          <div class="bubble draft" id="draftBubble">Euh oui je suis dispo je pense</div>
+          <div class="bubble final" id="finalBubble" style="opacity:0;"></div>
+          <div class="gen-tag" id="genTag">généré en 2s · ton : joueur</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="steps">
+  <div class="wrap">
+    <div class="steps">
+      <div class="steps-grid">
+        <div>
+          <div class="step-num">01</div>
+          <h3 class="step-title">Importe</h3>
+          <p class="step-desc">Colle un export WhatsApp ou envoie une capture d'écran de la conversation.</p>
+        </div>
+        <div>
+          <div class="step-num">02</div>
+          <h3 class="step-title">Choisis un ton</h3>
+          <p class="step-desc">Direct, joueur, mystérieux, drôle — l'IA adapte la suggestion.</p>
+        </div>
+        <div>
+          <div class="step-num">03</div>
+          <h3 class="step-title">Réponds</h3>
+          <p class="step-desc">Copie la réplique proposée, ou pioche parmi 3 variantes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">Pourquoi Drague.ai</div>
+      <h2>Ce que l'IA t'apporte, que tu n'as pas déjà.</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3>Réponses en secondes</h3>
+        <p>Plus besoin de laisser passer trois heures avant de trouver la bonne phrase.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎭</div>
+        <h3>Plusieurs tons</h3>
+        <p>La même situation, plusieurs façons d'y répondre — à toi de choisir celle qui te ressemble.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Discret par nature</h3>
+        <p>Tes conversations restent les tiennes. Rien n'est partagé, rien n'est public.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-eyebrow">Tarifs</div>
+      <h2>Un abonnement, sans surprise.</h2>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <p class="price-name">Découverte</p>
+        <p class="price-amount">Gratuit</p>
+        <ul class="price-features">
+          <li>5 suggestions / mois</li>
+          <li>1 ton disponible</li>
+          <li>Import texte uniquement</li>
+        </ul>
+        <a href="login.html" class="btn-price">Commencer</a>
+      </div>
+      <div class="price-card featured">
+        <span class="badge">Le plus choisi</span>
+        <p class="price-name">Mensuel</p>
+        <p class="price-amount">1,99 $ <span>/ mois</span></p>
+        <ul class="price-features">
+          <li>Suggestions illimitées</li>
+          <li>Tous les tons</li>
+          <li>Import texte et capture d'écran</li>
+        </ul>
+        <a href="login.html" class="btn-price primary">S'abonner</a>
+      </div>
+      <div class="price-card">
+        <p class="price-name">Annuel</p>
+        <p class="price-amount">19,99 $ <span>/ an</span></p>
+        <ul class="price-features">
+          <li>Tout le plan Mensuel</li>
+          <li>2 mois offerts</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <a href="login.html" class="btn-price">S'abonner</a>
+      </div>
+    </div>
+    <div class="payment-row">
+      <span class="pay-pill">Mobile Money · tous pays d'Afrique</span>
+      <span class="pay-pill">Visa · Mastercard · American Express</span>
+      <span class="pay-pill">Paiement en cryptomonnaie</span>
+    </div>
+  </div>
+</section>
+
+<section id="trust">
+  <div class="wrap">
+    <div class="trust">
+      <div>
+        <div class="section-eyebrow">Confidentialité</div>
+        <h2>Tes messages ne regardent que toi.</h2>
+        <p>Une conversation importée est traitée pour générer tes suggestions, puis peut être supprimée à tout moment depuis ton compte.</p>
+      </div>
+      <ul class="trust-list">
+        <li>Suppression des conversations sur demande</li>
+        <li>Aucun partage avec des tiers</li>
+        <li>Paiement sécurisé, aucune donnée bancaire stockée</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-row">
+      <span>© 2026 Drague.ai</span>
+      <span>Confidentialité · Conditions · Contact</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const draft = document.getElementById('draftBubble');
+  const final = document.getElementById('finalBubble');
+  const tag = document.getElementById('genTag');
+  const fullText = "Occupé(e) ? Toujours, mais je fais toujours de la place pour les bonnes idées. Tu proposes quoi ?";
+
+  setTimeout(() => {
+    draft.style.opacity = '0.35';
+    final.style.opacity = '1';
+    let i = 0;
+    const interval = setInterval(() => {
+      final.innerHTML = fullText.slice(0, i) + '<span class="typing-cursor"></span>';
+      i++;
+      if (i > fullText.length) {
+        clearInterval(interval);
+        final.innerHTML = fullText + '<span class="ticks">✓✓</span>';
+        tag.classList.add('show');
+      }
+    }, 28);
+  }, 1200);
+</script>
+
+</body>
+</html>

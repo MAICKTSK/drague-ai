@@ -1,0 +1,16 @@
+<svg viewBox="0 0 250 64" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600&display=swap');
+      .wordmark { font-family: 'Fraunces', serif; font-weight: 600; font-size: 32px; fill: currentColor; }
+    </style>
+  </defs>
+
+  <!-- Icône -->
+  <rect x="6" y="8" width="52" height="38" rx="17"/>
+  <path d="M26 46 L20 58 L38 46 Z"/>
+  <path d="M32 16 C33 22, 38 27, 44 28 C38 29, 33 34, 32 40 C31 34, 26 29, 20 28 C26 27, 31 22, 32 16 Z" fill-opacity="0.35"/>
+
+  <!-- Wordmark -->
+  <text x="76" y="41" class="wordmark">Drague.ai</text>
+</svg>
