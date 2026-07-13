@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Drague.ai — dashboard admin</title>
+<link rel="icon" type="image/svg+xml" href="assets/drague-ai-logo-icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1A1420; --plum:#2C2038; --plum-2:#382A46; --plum-3:#443552;
+    --chalk:#F6EFE4; --punch:#E23F6A; --gold:#E8B84B; --mist:#6FA8B5;
+    --green:#7FBF8F;
+    --text-soft: rgba(246,239,228,0.65); --text-faint: rgba(246,239,228,0.4);
+    --border: rgba(246,239,228,0.1);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--chalk);font-family:'Inter',sans-serif;line-height:1.5;}
+
+  .layout{display:flex;min-height:100vh;}
+
+  .sidebar{
+    width:230px;flex-shrink:0;background:var(--plum);border-right:1px solid var(--border);
+    padding:24px 16px;display:flex;flex-direction:column;gap:28px;
+  }
+  .logo{font-family:'Fraunces',serif;font-weight:600;font-size:18px;display:flex;align-items:center;gap:8px;padding:0 8px;}
+  .logo .dot{width:7px;height:7px;border-radius:50%;background:var(--punch);}
+  .nav-group{display:flex;flex-direction:column;gap:2px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;
+    font-size:14px;color:var(--text-soft);cursor:pointer;
+  }
+  .nav-item.active{background:var(--plum-3);color:var(--chalk);}
+  .nav-item .ico{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{margin-top:auto;font-size:12px;color:var(--text-faint);padding:0 8px;}
+
+  .app-access{
+    display:flex;align-items:center;gap:10px;background:var(--punch);border-radius:12px;
+    padding:12px 14px;cursor:pointer;transition:opacity 0.15s;
+  }
+  .app-access:hover{opacity:0.9;}
+  .app-access-ico{font-size:17px;}
+  .app-access-title{font-size:13px;font-weight:600;color:var(--chalk);}
+  .app-access-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(246,239,228,0.75);}
+
+  .main{flex:1;padding:32px 40px;overflow-x:hidden;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;}
+  .greeting h1{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin:0 0 4px;}
+  .greeting p{font-size:13px;color:var(--text-faint);margin:0;}
+  .owner-chip{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);
+    border:1px solid var(--border);padding:6px 12px;border-radius:100px;
+  }
+
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:32px;}
+
+  .balance-panel{
+    display:flex;justify-content:space-between;align-items:center;
+    background:linear-gradient(135deg, var(--plum) 0%, var(--plum-3) 100%);
+    border:1px solid var(--gold);border-radius:16px;padding:24px 28px;margin-bottom:24px;
+  }
+  .balance-amount{font-family:'Fraunces',serif;font-size:38px;font-weight:600;color:var(--gold);margin:6px 0 8px;}
+  .balance-cta{
+    background:var(--punch);color:var(--chalk);border:none;padding:13px 22px;
+    border-radius:100px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;
+  }
+  .stat-card{background:var(--plum);border:1px solid var(--border);border-radius:14px;padding:20px;}
+  .stat-label{font-size:12px;color:var(--text-faint);margin-bottom:10px;}
+  .stat-value{font-family:'Fraunces',serif;font-size:28px;font-weight:600;}
+  .stat-value.punch{color:var(--punch);}
+  .stat-value.gold{color:var(--gold);}
+  .stat-sub{font-size:12px;color:var(--mist);margin-top:6px;}
+
+  .content-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start;}
+
+  .panel{background:var(--plum);border:1px solid var(--border);border-radius:16px;padding:22px;}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .panel-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin:0;}
+  .panel-link{font-size:12px;color:var(--text-soft);cursor:pointer;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{
+    text-align:left;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-faint);
+    text-transform:uppercase;letter-spacing:0.05em;padding:0 10px 10px;border-bottom:1px solid var(--border);
+  }
+  td{padding:12px 10px;border-bottom:1px solid var(--border);color:var(--chalk);}
+  tr:last-child td{border-bottom:none;}
+  .user-cell{display:flex;align-items:center;gap:8px;}
+  .mini-avatar{width:22px;height:22px;border-radius:50%;background:var(--plum-3);display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
+
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:100px;white-space:nowrap;}
+  .tag.success{background:rgba(127,191,143,0.15);color:var(--green);}
+  .tag.pending{background:rgba(232,184,75,0.15);color:var(--gold);}
+  .tag.failed{background:rgba(226,63,106,0.15);color:var(--punch);}
+  .method{font-size:12px;color:var(--text-soft);}
+
+  .withdrawal-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--border);
+  }
+  .withdrawal-item:last-child{border-bottom:none;}
+  .wd-left{display:flex;flex-direction:column;gap:2px;}
+  .wd-amount{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--chalk);}
+  .wd-user{font-size:11px;color:var(--text-faint);}
+  .wd-action{
+    font-size:11px;color:var(--chalk);background:var(--punch);border:none;
+    padding:6px 12px;border-radius:100px;cursor:pointer;
+  }
+
+  .method-toggle{display:flex;gap:8px;margin-bottom:16px;}
+
+  .withdraw-new{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);}
+  .withdraw-form{display:flex;flex-direction:column;gap:10px;}
+  .wd-input{
+    background:var(--plum-2);border:1px solid var(--border);border-radius:10px;
+    padding:10px 12px;color:var(--chalk);font-size:13px;font-family:'Inter',sans-serif;
+  }
+  .wd-input::placeholder{color:var(--text-faint);}
+  .wd-submit{
+    background:var(--punch);color:var(--chalk);border:none;padding:10px;
+    border-radius:10px;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .wd-error{font-size:12px;color:var(--punch);min-height:16px;}
+
+  .users-panel{margin-top:20px;}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo"><svg width="20" height="20" viewBox="0 0 64 64" style="flex-shrink:0;"><rect x="6" y="8" width="52" height="38" rx="17" fill="var(--punch)"/><path d="M26 46 L20 58 L38 46 Z" fill="var(--punch)"/><path d="M32 16 C33 22, 38 27, 44 28 C38 29, 33 34, 32 40 C31 34, 26 29, 20 28 C26 27, 31 22, 32 16 Z" fill="var(--ink)"/></svg>Drague.ai</div>
+
+    <div class="app-access" id="appAccess">
+      <span class="app-access-ico">🚀</span>
+      <div class="app-access-text">
+        <div class="app-access-title">Utiliser l'app</div>
+        <div class="app-access-sub">Accès illimité propriétaire</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-item active"><span class="ico">📊</span>Vue d'ensemble</div>
+      <div class="nav-item"><span class="ico">👥</span>Utilisateurs</div>
+      <div class="nav-item"><span class="ico">💳</span>Paiements</div>
+      <div class="nav-item"><span class="ico">🪙</span>Retraits USDT</div>
+      <div class="nav-item"><span class="ico">🕓</span>Activité</div>
+      <div class="nav-item"><span class="ico">⚙️</span>Paramètres</div>
+    </div>
+    <div class="sidebar-footer">Drague.ai · Admin<br>v0.1 — ébauche</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="greeting">
+        <h1 id="greetingName">Bonjour</h1>
+        <p id="greetingDate">Vue d'ensemble du site</p>
+      </div>
+      <span class="owner-chip">Connecté en propriétaire</span>
+    </div>
+
+    <div class="balance-panel">
+      <div class="balance-left">
+        <div class="stat-label">Solde disponible</div>
+        <div class="balance-amount" id="balanceAmount">— $</div>
+        <div class="stat-sub" id="balanceSub">Chargement...</div>
+      </div>
+      <button class="balance-cta" id="balanceCta">Retirer maintenant</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Utilisateurs totaux</div>
+        <div class="stat-value" id="statTotalUsers">—</div>
+        <div class="stat-sub" id="statTotalUsersSub"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Abonnements actifs</div>
+        <div class="stat-value gold" id="statActiveSubs">—</div>
+        <div class="stat-sub" id="statActiveSubsSub"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total encaissé (USD)</div>
+        <div class="stat-value" id="statCollected">—</div>
+        <div class="stat-sub">Depuis le lancement</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Retraits en attente</div>
+        <div class="stat-value punch" id="statPendingWithdrawals">—</div>
+        <div class="stat-sub">vérification fournisseur en cours si &gt; 0</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Paiements récents</h3>
+          <span class="panel-link">Voir tout →</span>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Utilisateur</th><th>Méthode</th><th>Montant</th><th>Statut</th><th>Date</th></tr>
+          </thead>
+          <tbody id="paymentsBody">
+            <tr><td colspan="5" class="method">Chargement...</td></tr>
+          </tbody>
+        </table>
+
+        <div class="users-panel">
+          <div class="panel-head">
+            <h3 class="panel-title">Derniers utilisateurs inscrits</h3>
+            <span class="panel-link">Voir tout →</span>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Utilisateur</th><th>Pays</th><th>Connexion</th><th>Plan</th></tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="4" class="method">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Retraits USDT récents</h3>
+        </div>
+        <div id="recentWithdrawals">
+          <div class="withdrawal-item"><div class="wd-left"><span class="wd-amount">Chargement...</span></div></div>
+        </div>
+
+        <div class="withdraw-new">
+          <div class="panel-link" style="margin-bottom:10px;">+ Nouveau retrait</div>
+          <div class="withdraw-form">
+            <input type="number" placeholder="Montant en $ (min 1 $ — max 100 000 $)" class="wd-input" id="wdAmount" min="1" max="100000" />
+            <input type="text" placeholder="Adresse wallet USDT (TRC20)" class="wd-input" id="wdWallet" />
+            <input type="text" placeholder="Réseau (TRC20, BEP20...)" class="wd-input" id="wdNetwork" value="TRC20" />
+            <button class="wd-submit" id="wdSubmit">Lancer le retrait USDT</button>
+            <div class="wd-error" id="wdError"></div>
+            <div style="font-size:11px;color:var(--text-faint);">Instantané pour la plupart des retraits · une vérification fournisseur peut s'ajouter pour les très gros montants.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <div class="panel-head">
+        <h3 class="panel-title">Historique de mes retraits</h3>
+        <span class="panel-link">Exporter en CSV</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Montant</th><th>Réseau</th><th>Adresse</th><th>Statut</th></tr>
+        </thead>
+        <tbody id="withdrawalsHistoryBody">
+          <tr><td colspan="5" class="method">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+</main>
+</div>
+
+<script src="assets/api.js"></script>
+<script>
+  requireAdmin();
+
+  const user = getUser();
+  document.getElementById('greetingName').textContent = `Bonjour, ${user?.displayName || 'Propriétaire'}`;
+  document.getElementById('greetingDate').textContent = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+
+  const fmt = (n) => (n ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const statusTag = (status) => {
+    if (status === 'SUCCESS') return '<span class="tag success">Réussi</span>';
+    if (status === 'PENDING') return '<span class="tag pending">En attente</span>';
+    return '<span class="tag failed">Échoué</span>';
+  };
+  const initials = (name) => (name || '?').slice(0, 2).toUpperCase();
+
+  async function loadDashboard() {
+    try {
+      const stats = await apiFetch('/admin/stats');
+      document.getElementById('balanceAmount').textContent = `${fmt(stats.availableBalanceUSD)} $`;
+      document.getElementById('balanceSub').textContent =
+        `${fmt(stats.totalCollectedUSD)} $ encaissés — ${fmt(stats.totalWithdrawnUSD)} $ déjà retirés`;
+      document.getElementById('statTotalUsers').textContent = stats.totalUsers;
+      document.getElementById('statActiveSubs').textContent = stats.activeSubscriptions;
+      document.getElementById('statActiveSubsSub').textContent = stats.totalUsers
+        ? `${((stats.activeSubscriptions / stats.totalUsers) * 100).toFixed(1)} % des utilisateurs`
+        : '';
+      document.getElementById('statCollected').textContent = `${fmt(stats.totalCollectedUSD)} $`;
+      document.getElementById('statPendingWithdrawals').textContent = stats.pendingWithdrawals;
+    } catch (err) {
+      console.error('Erreur stats:', err.message);
+    }
+
+    try {
+      const payments = await apiFetch('/admin/payments');
+      const body = document.getElementById('paymentsBody');
+      body.innerHTML = payments.slice(0, 10).map(p => `
+        <tr>
+          <td><div class="user-cell"><div class="mini-avatar">${initials(p.user?.email)}</div>${p.user?.email || '—'}</div></td>
+          <td class="method">${p.provider} · ${p.method}</td>
+          <td>${fmt(p.amount)} $</td>
+          <td>${statusTag(p.status)}</td>
+          <td>${new Date(p.createdAt).toLocaleDateString('fr-FR')}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" class="method">Aucun paiement pour l\'instant.</td></tr>';
+    } catch (err) {
+      console.error('Erreur paiements:', err.message);
+    }
+
+    try {
+      const users = await apiFetch('/admin/users');
+      const body = document.getElementById('usersBody');
+      body.innerHTML = users.slice(0, 10).map(u => `
+        <tr>
+          <td><div class="user-cell"><div class="mini-avatar">${initials(u.username)}</div>${u.username}</div></td>
+          <td class="method">${u.country || '—'}</td>
+          <td class="method">${u.authProvider}</td>
+          <td><span class="tag ${u.subscriptions?.length ? 'success' : 'pending'}">${u.subscriptions?.[0]?.plan?.name || 'Gratuit'}</span></td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="method">Aucun utilisateur pour l\'instant.</td></tr>';
+    } catch (err) {
+      console.error('Erreur utilisateurs:', err.message);
+    }
+
+    try {
+      const withdrawals = await apiFetch('/admin/withdrawals');
+
+      const recentEl = document.getElementById('recentWithdrawals');
+      const recent = withdrawals.slice(0, 3);
+      recentEl.innerHTML = recent.map(w => `
+        <div class="withdrawal-item">
+          <div class="wd-left">
+            <span class="wd-amount">${fmt(w.amountUSD)} $ · USDT</span>
+            <span class="wd-user">${w.network} · ${new Date(w.createdAt).toLocaleDateString('fr-FR')}</span>
+          </div>
+          ${statusTag(w.status)}
+        </div>
+      `).join('') || '<div class="withdrawal-item"><div class="wd-left"><span class="wd-amount">Aucun retrait pour l\'instant.</span></div></div>';
+
+      const historyBody = document.getElementById('withdrawalsHistoryBody');
+      historyBody.innerHTML = withdrawals.map(w => `
+        <tr>
+          <td>${new Date(w.createdAt).toLocaleDateString('fr-FR')}</td>
+          <td>${fmt(w.amountUSD)} $</td>
+          <td class="method">${w.network}</td>
+          <td class="method">${w.walletAddress ? w.walletAddress.slice(0, 4) + '...' + w.walletAddress.slice(-4) : '—'}</td>
+          <td>${statusTag(w.status)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="5" class="method">Aucun retrait pour l\'instant.</td></tr>';
+    } catch (err) {
+      console.error('Erreur retraits:', err.message);
+    }
+  }
+
+  loadDashboard();
+
+  document.getElementById('appAccess').addEventListener('click', () => {
+    window.location.href = 'app.html';
+  });
+
+  document.getElementById('balanceCta').addEventListener('click', () => {
+    document.getElementById('wdAmount').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('wdAmount').focus();
+  });
+
+  const wdSubmit = document.getElementById('wdSubmit');
+  const wdAmount = document.getElementById('wdAmount');
+  const wdWallet = document.getElementById('wdWallet');
+  const wdNetwork = document.getElementById('wdNetwork');
+  const wdError = document.getElementById('wdError');
+
+  wdSubmit.addEventListener('click', async () => {
+    const amountUSD = parseFloat(wdAmount.value);
+    const walletAddress = wdWallet.value.trim();
+    const network = wdNetwork.value.trim() || 'TRC20';
+
+    if (isNaN(amountUSD) || amountUSD < 1 || amountUSD > 100000) {
+      wdError.textContent = "Le montant doit être compris entre 1 $ et 100 000 $.";
+      return;
+    }
+    if (!walletAddress) {
+      wdError.textContent = "Adresse wallet requise.";
+      return;
+    }
+
+    wdError.textContent = "";
+    wdSubmit.textContent = "Envoi en cours...";
+    wdSubmit.disabled = true;
+
+    try {
+      await apiFetch('/payments/withdraw/usdt', {
+        method: 'POST',
+        body: JSON.stringify({ amountUSD, walletAddress, network }),
+      });
+      wdAmount.value = '';
+      wdWallet.value = '';
+      await loadDashboard();
+    } catch (err) {
+      wdError.textContent = err.message;
+    } finally {
+      wdSubmit.textContent = "Lancer le retrait USDT";
+      wdSubmit.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

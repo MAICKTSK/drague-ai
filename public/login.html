@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Connexion — Drague.ai</title>
+<link rel="icon" type="image/svg+xml" href="assets/drague-ai-logo-icon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1A1420; --plum:#2C2038; --plum-2:#382A46;
+    --chalk:#F6EFE4; --punch:#E23F6A; --gold:#E8B84B; --mist:#6FA8B5;
+    --text-soft: rgba(246,239,228,0.65); --text-faint: rgba(246,239,228,0.4);
+    --border: rgba(246,239,228,0.1);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;background:var(--ink);color:var(--chalk);
+    font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .card{width:100%;max-width:380px;background:var(--plum);border:1px solid var(--border);border-radius:20px;padding:36px;}
+  .logo{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin-bottom:28px;}
+  h1{font-family:'Fraunces',serif;font-size:24px;font-weight:600;margin:0 0 8px;}
+  p.sub{font-size:14px;color:var(--text-soft);margin:0 0 24px;}
+  label{font-size:12px;color:var(--text-faint);display:block;margin-bottom:6px;}
+  input{
+    width:100%;background:var(--plum-2);border:1px solid var(--border);border-radius:10px;
+    padding:12px 14px;color:var(--chalk);font-size:15px;font-family:'Inter',sans-serif;margin-bottom:16px;
+  }
+  input::placeholder{color:var(--text-faint);}
+  button{
+    width:100%;background:var(--punch);color:var(--chalk);border:none;padding:13px;
+    border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  button:disabled{opacity:0.5;cursor:default;}
+  .error{color:var(--punch);font-size:13px;margin-top:10px;min-height:16px;}
+  .success{color:var(--mist);font-size:13px;margin-top:10px;min-height:16px;}
+  .step{display:none;}
+  .step.active{display:block;}
+  .resend{font-size:13px;color:var(--text-soft);text-align:center;margin-top:16px;cursor:pointer;}
+  .resend:hover{color:var(--chalk);}
+</style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 64 64" style="flex-shrink:0;"><rect x="6" y="8" width="52" height="38" rx="17" fill="#E23F6A"/><path d="M26 46 L20 58 L38 46 Z" fill="#E23F6A"/><path d="M32 16 C33 22, 38 27, 44 28 C38 29, 33 34, 32 40 C31 34, 26 29, 20 28 C26 27, 31 22, 32 16 Z" fill="#1A1420"/></svg>
+      Drague.ai
+    </div>
+
+    <div class="step active" id="stepEmail">
+      <h1>Connexion</h1>
+      <p class="sub">Reçois un code à 5 chiffres par email, aucun mot de passe à retenir.</p>
+      <label for="email">Adresse email</label>
+      <input type="email" id="email" placeholder="toi@example.com" />
+      <button id="sendCodeBtn">Recevoir mon code</button>
+      <div class="error" id="emailError"></div>
+    </div>
+
+    <div class="step" id="stepCode">
+      <h1>Vérification</h1>
+      <p class="sub">Entre le code à 5 chiffres envoyé à <strong id="emailDisplay"></strong>.</p>
+      <label for="code">Code à 5 chiffres</label>
+      <input type="text" id="code" maxlength="5" inputmode="numeric" placeholder="00000" />
+      <button id="verifyBtn">Vérifier et me connecter</button>
+      <div class="error" id="codeError"></div>
+      <div class="resend" id="resendBtn">Je n'ai pas reçu le code, renvoyer</div>
+    </div>
+  </div>
+
+<script src="assets/api.js"></script>
+<script>
+  if (isLoggedIn()) {
+    window.location.href = isAdmin() ? "admin.html" : "app.html";
+  }
+
+  const stepEmail = document.getElementById('stepEmail');
+  const stepCode = document.getElementById('stepCode');
+  const emailInput = document.getElementById('email');
+  const codeInput = document.getElementById('code');
+  const emailError = document.getElementById('emailError');
+  const codeError = document.getElementById('codeError');
+  const sendCodeBtn = document.getElementById('sendCodeBtn');
+  const verifyBtn = document.getElementById('verifyBtn');
+
+  let currentEmail = "";
+
+  sendCodeBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    emailError.textContent = "";
+    if (!email) { emailError.textContent = "Entre ton email."; return; }
+
+    sendCodeBtn.disabled = true;
+    sendCodeBtn.textContent = "Envoi en cours...";
+    try {
+      await apiFetch('/auth/request-code', { method: 'POST', body: JSON.stringify({ email }) });
+      currentEmail = email;
+      document.getElementById('emailDisplay').textContent = email;
+      stepEmail.classList.remove('active');
+      stepCode.classList.add('active');
+    } catch (err) {
+      emailError.textContent = err.message;
+    } finally {
+      sendCodeBtn.disabled = false;
+      sendCodeBtn.textContent = "Recevoir mon code";
+    }
+  });
+
+  verifyBtn.addEventListener('click', async () => {
+    const code = codeInput.value.trim();
+    codeError.textContent = "";
+    if (code.length !== 5) { codeError.textContent = "Le code fait 5 chiffres."; return; }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = "Vérification...";
+    try {
+      const data = await apiFetch('/auth/verify-code', {
+        method: 'POST',
+        body: JSON.stringify({ email: currentEmail, code }),
+      });
+      setSession(data.token, data.user);
+      window.location.href = data.user.role === "ADMIN" ? "admin.html" : "app.html";
+    } catch (err) {
+      codeError.textContent = err.message;
+    } finally {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = "Vérifier et me connecter";
+    }
+  });
+
+  document.getElementById('resendBtn').addEventListener('click', () => sendCodeBtn.click());
+</script>
+
+</body>
+</html>
